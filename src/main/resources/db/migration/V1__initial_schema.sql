@@ -1,0 +1,80 @@
+CREATE TABLE app_users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    display_name VARCHAR(80) NOT NULL,
+    timezone VARCHAR(64) NOT NULL,
+    level INTEGER NOT NULL DEFAULT 1 CHECK (level > 0),
+    xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0),
+    streak_days INTEGER NOT NULL DEFAULT 0 CHECK (streak_days >= 0),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE areas (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    slug VARCHAR(30) NOT NULL,
+    color VARCHAR(7) NOT NULL,
+    icon VARCHAR(40) NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (user_id, slug)
+);
+
+CREATE TABLE habits (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    area_id UUID NOT NULL REFERENCES areas(id),
+    name VARCHAR(80) NOT NULL,
+    target_label VARCHAR(50) NOT NULL,
+    period VARCHAR(20) NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE habit_completions (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    habit_id UUID NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+    idempotency_key VARCHAR(120) NOT NULL,
+    completed_at TIMESTAMPTZ NOT NULL,
+    recorded_value NUMERIC(12, 2),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, idempotency_key)
+);
+
+CREATE TABLE point_transactions (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    completion_id UUID REFERENCES habit_completions(id),
+    amount INTEGER NOT NULL,
+    reason VARCHAR(60) NOT NULL,
+    balance_after INTEGER NOT NULL CHECK (balance_after >= 0),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (completion_id)
+);
+
+CREATE INDEX idx_habits_user_active ON habits(user_id, active);
+CREATE INDEX idx_completions_user_date ON habit_completions(user_id, completed_at);
+CREATE INDEX idx_points_user_date ON point_transactions(user_id, created_at);
+
+INSERT INTO app_users (id, email, display_name, timezone, level, xp, streak_days)
+VALUES ('00000000-0000-0000-0000-000000000001', 'demo@clih.local', 'Gustavo', 'America/Sao_Paulo', 8, 1240, 7);
+
+INSERT INTO areas (id, user_id, name, slug, color, icon, position) VALUES
+('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000001', 'Estudos', 'study', '#23B6A4', 'book', 1),
+('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000001', 'Saúde', 'health', '#2F63EE', 'directions_walk', 2),
+('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000001', 'Leitura', 'reading', '#7B61F2', 'menu_book', 3),
+('00000000-0000-0000-0000-000000000104', '00000000-0000-0000-0000-000000000001', 'Sono', 'sleep', '#FF8A3D', 'bedtime', 4);
+
+INSERT INTO habits (id, user_id, area_id, name, target_label, period, position) VALUES
+('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000101', 'Estudar programação', '30 min', 'AFTERNOON', 1),
+('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000102', 'Caminhar', '3 km', 'MORNING', 2),
+('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000103', 'Ler', '10 páginas', 'EVENING', 3),
+('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000101', 'Organizar prioridades', '10 min', 'MORNING', 4),
+('10000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000104', 'Dormir antes das 23h', '8 horas', 'EVENING', 5);
+
+INSERT INTO habit_completions (id, user_id, habit_id, idempotency_key, completed_at) VALUES
+('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'seed-study', CURRENT_TIMESTAMP),
+('20000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000004', 'seed-priorities', CURRENT_TIMESTAMP),
+('20000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000005', 'seed-sleep', CURRENT_TIMESTAMP);
