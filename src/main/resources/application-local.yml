@@ -1,8 +1,24 @@
+# Este arquivo só é carregado quando SPRING_PROFILES_ACTIVE=local.
 spring:
-  config:
-    activate:
-      on-profile: local
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/clih}
+    username: ${DATABASE_USERNAME:clih}
+    password: ${DATABASE_PASSWORD:clih}
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start-only
 
-logging:
-  level:
-    com.gurizadadointerior.clih: DEBUG
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+app:
+  security:
+    mode: local
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:8081

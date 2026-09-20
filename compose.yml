@@ -1,19 +1,21 @@
 services:
   postgres:
     image: postgres:17-alpine
+    container_name: clih-postgres
     environment:
-      POSTGRES_DB: clih
-      POSTGRES_USER: clih
-      POSTGRES_PASSWORD: clih
+      POSTGRES_DB: ${POSTGRES_DB:-clih}
+      POSTGRES_USER: ${POSTGRES_USER:-clih}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clih}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - clih-postgres:/var/lib/postgresql/data
+      - clih-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U clih -d clih"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 10
+    restart: unless-stopped
 
 volumes:
-  clih-postgres:
+  clih-postgres-data:

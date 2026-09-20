@@ -1,21 +1,13 @@
 # Decisões de arquitetura
 
-## Monólito modular
+A documentação arquitetural detalhada está em [`architecture/backend-architecture.md`](architecture/backend-architecture.md).
 
-O MVP começa como uma única aplicação Spring Boot organizada por domínio. Isso reduz custo operacional para uma equipe de três pessoas e mantém claras as fronteiras que poderão ser separadas apenas se houver volume real.
+Resumo das decisões:
 
-## Banco como fonte oficial
-
-Pontos e conquistas nunca são aceitos do aplicativo. Uma conclusão de hábito é o evento de entrada; o backend calcula a recompensa dentro da mesma transação.
-
-## Idempotência
-
-O aplicativo envia `Idempotency-Key` ao concluir uma atividade. A combinação usuário + chave é única no banco. Se uma fila offline repetir a requisição, a API devolve a conclusão existente sem duplicar pontos.
-
-## Segurança
-
-Swagger e saúde são públicos. O perfil `local` libera os endpoints do produto para desenvolvimento; outros perfis negam acesso por padrão até a integração OAuth/OpenID ser configurada.
-
-## Migrações
-
-Flyway é a única forma de alterar o esquema. `ddl-auto=validate` faz o Hibernate conferir o mapeamento sem tentar editar o banco.
+- Monólito modular organizado por contexto e camadas DDD pragmáticas.
+- PostgreSQL como fonte oficial dos dados.
+- Flyway como única forma de evoluir o esquema.
+- V1 publicada preservada, evolução compatível na V2 e integridade multiusuário na V3.
+- Conclusões idempotentes e recompensas calculadas no backend.
+- Segurança fechada por padrão, perfil local explícito e JWT/OIDC em produção.
+- XP permanente e futura moeda da loja separada.
