@@ -39,6 +39,12 @@ public class HabitCompletion extends BaseEntity {
 	@Column(name = "xp_awarded", nullable = false)
 	private int xpAwarded;
 
+	@Column(name = "undone_at")
+	private Instant undoneAt;
+
+	public boolean isUndone() { return undoneAt != null; }
+	public void undo(Instant now) { this.undoneAt = now; }
+
 	@Version
 	@Column(nullable = false)
 	private long version;

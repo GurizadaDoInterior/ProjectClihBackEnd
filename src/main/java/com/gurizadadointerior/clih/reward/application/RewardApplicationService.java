@@ -55,6 +55,26 @@ public class RewardApplicationService {
 		return new RewardResult(xp, progress.getCurrentLevel() > previousLevel, toResponse(progress));
 	}
 
+    // Held by the caller's completion transaction; serialize completion/undo per owner.
+    @Transactional
+    public void lockProgress(UUID userId) {
+        progressRepository.createIfAbsent(userId);
+        progressRepository.findByIdForUpdate(userId)
+            .orElseThrow(() -> new IllegalStateException("User progress could not be loaded"));
+    }
+
+    @Transactional
+    public void reverseHabitCompletion(UUID userId, UUID completionId, int xp, ProgressSnapshot streak) {
+        var progress = progressRepository.findByIdForUpdate(userId).orElseThrow();
+        var nextTotal = progress.getTotalXp() - xp;
+        progress.reverseExperience(xp, levelPolicy.levelFor(nextTotal), streak);
+        progressRepository.save(progress);
+        transactionRepository.save(new XpTransaction(
+            userId, -xp, XpReason.COMPLETION_UNDONE, completionId, nextTotal,
+            "Conclusão desmarcada"
+        ));
+    }
+
 	@Transactional(readOnly = true)
 	public ProgressView getProgress(UUID userId) {
 		return progressRepository.findById(userId)

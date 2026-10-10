@@ -52,6 +52,15 @@ public class UserProgress {
 		this.lastActiveDate = streak.lastActiveDate();
 	}
 
+	public void reverseExperience(int amount, int level, ProgressSnapshot streak) {
+        if (amount < 0 || amount > totalXp) throw new IllegalArgumentException("Invalid XP reversal");
+        this.totalXp -= amount;
+        this.currentLevel = level;
+        this.currentStreak = streak.currentStreak();
+        this.longestStreak = streak.longestStreak();
+        this.lastActiveDate = streak.lastActiveDate();
+    }
+
 	public UUID getUserId() { return userId; }
 	public long getTotalXp() { return totalXp; }
 	public int getCurrentLevel() { return currentLevel; }

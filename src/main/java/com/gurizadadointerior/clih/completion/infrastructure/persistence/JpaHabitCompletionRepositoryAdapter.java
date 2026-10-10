@@ -28,22 +28,27 @@ class JpaHabitCompletionRepositoryAdapter implements HabitCompletionRepository {
 
 	@Override
 	public boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate date) {
-		return repository.existsByUserIdAndHabitIdAndActivityDate(userId, habitId, date);
+		return repository.existsByUserIdAndHabitIdAndActivityDateAndUndoneAtIsNull(userId, habitId, date);
 	}
 
 	@Override
 	public List<HabitCompletion> findAllByUserIdAndActivityDate(UUID userId, LocalDate date) {
-		return repository.findAllByUserIdAndActivityDate(userId, date);
+		return repository.findAllByUserIdAndActivityDateAndUndoneAtIsNull(userId, date);
 	}
 
 	@Override
 	public List<HabitCompletion> findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(UUID userId, LocalDate start, LocalDate end) {
-		return repository.findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(userId, start, end);
+		return repository.findAllByUserIdAndActivityDateBetweenAndUndoneAtIsNullOrderByActivityDateAsc(userId, start, end);
 	}
 
 	@Override
 	public List<LocalDate> findDistinctActivityDatesByUserId(UUID userId) {
 		return repository.findDistinctActivityDatesByUserId(userId);
+	}
+
+	@Override
+	public Optional<HabitCompletion> findByIdAndUserIdAndHabitId(UUID id, UUID userId, UUID habitId) {
+		return repository.findByIdAndUserIdAndHabitId(id, userId, habitId);
 	}
 
 	@Override
@@ -53,11 +58,12 @@ class JpaHabitCompletionRepositoryAdapter implements HabitCompletionRepository {
 }
 
 interface SpringDataHabitCompletionRepository extends JpaRepository<HabitCompletion, UUID> {
+	Optional<HabitCompletion> findByIdAndUserIdAndHabitId(UUID id, UUID userId, UUID habitId);
 	Optional<HabitCompletion> findByUserIdAndIdempotencyKey(UUID userId, String key);
-	boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate date);
-	List<HabitCompletion> findAllByUserIdAndActivityDate(UUID userId, LocalDate date);
-	List<HabitCompletion> findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(UUID userId, LocalDate start, LocalDate end);
+	boolean existsByUserIdAndHabitIdAndActivityDateAndUndoneAtIsNull(UUID userId, UUID habitId, LocalDate date);
+	List<HabitCompletion> findAllByUserIdAndActivityDateAndUndoneAtIsNull(UUID userId, LocalDate date);
+	List<HabitCompletion> findAllByUserIdAndActivityDateBetweenAndUndoneAtIsNullOrderByActivityDateAsc(UUID userId, LocalDate start, LocalDate end);
 
-	@Query("select distinct completion.activityDate from HabitCompletion completion where completion.userId = :userId order by completion.activityDate desc")
+	@Query("select distinct completion.activityDate from HabitCompletion completion where completion.userId = :userId and completion.undoneAt is null order by completion.activityDate desc")
 	List<LocalDate> findDistinctActivityDatesByUserId(@Param("userId") UUID userId);
 }

@@ -19,5 +19,7 @@ public interface HabitCompletionRepository {
 
 	List<LocalDate> findDistinctActivityDatesByUserId(UUID userId);
 
+	Optional<HabitCompletion> findByIdAndUserIdAndHabitId(UUID id, UUID userId, UUID habitId);
+
 	HabitCompletion saveAndFlush(HabitCompletion completion);
 }

@@ -51,12 +51,14 @@ public class CompletionApplicationService {
 		String idempotencyKey,
 		CompleteHabitCommand command
 	) {
+		rewardService.lockProgress(user.getId());
 		var normalizedKey = idempotencyKey.trim();
 		var existing = repository.findByUserIdAndIdempotencyKey(user.getId(), normalizedKey);
 		if (existing.isPresent()) {
 			if (!existing.get().getHabitId().equals(habitId)) {
 				throw new ApiException(ErrorCode.IDEMPOTENCY_KEY_REUSED);
 			}
+			if (existing.get().isUndone()) throw new ApiException(ErrorCode.COMPLETION_UNDONE);
 			return CompletionResult.replay(existing.get(), rewardService.getProgress(user.getId()));
 		}
 
@@ -96,6 +98,19 @@ public class CompletionApplicationService {
 
 		return CompletionResult.created(completion, reward.levelUp(), reward.progress());
 	}
+
+    @Transactional
+    public void undo(AppUser user, UUID habitId, UUID completionId) {
+        rewardService.lockProgress(user.getId());
+        var completion = repository.findByIdAndUserIdAndHabitId(completionId, user.getId(), habitId)
+            .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
+        if (completion.isUndone()) return;
+        completion.undo(Instant.now(clock));
+        repository.saveAndFlush(completion);
+        var today = LocalDate.now(clock.withZone(user.zoneId()));
+        var streak = streakCalculator.calculate(repository.findDistinctActivityDatesByUserId(user.getId()), today);
+        rewardService.reverseHabitCompletion(user.getId(), completionId, completion.getXpAwarded(), streak);
+    }
 
 	private void validateCompletionTime(Instant completedAt, Instant now) {
 		if (completedAt.isAfter(now.plus(MAXIMUM_CLOCK_SKEW)) || completedAt.isBefore(now.minus(MAXIMUM_OFFLINE_PERIOD))) {

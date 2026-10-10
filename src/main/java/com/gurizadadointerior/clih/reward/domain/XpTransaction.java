@@ -23,7 +23,7 @@ public class XpTransaction extends BaseEntity {
 	@Column(nullable = false, length = 30)
 	private XpReason reason;
 
-	@Column(name = "completion_id", nullable = false, unique = true)
+	@Column(name = "completion_id", nullable = false)
 	private UUID sourceId;
 
 	@Column(name = "balance_after", nullable = false)
