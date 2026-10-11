@@ -171,3 +171,7 @@ Leia, nesta ordem:
 2. `docs/architecture/backend-architecture.md`
 3. `docs/product/roadmap.md`
 4. `CONTRIBUTING.md`
+
+## Foto de perfil
+
+PUT /api/v1/me/avatar recebe JSON com image no formato data:image/jpeg;base64,... (até 1,4 milhão de caracteres). A imagem é validada, recortada no centro e regravada em JPEG de 512×512; os bytes são persistidos no PostgreSQL pela migração V5. GET /me retorna a foto em avatarUrl como data URI, mantendo a leitura sob a identidade autenticada sem expor arquivos públicos. DELETE /me/avatar remove a foto. O aplicativo permite escolher, trocar e remover em Editar perfil.

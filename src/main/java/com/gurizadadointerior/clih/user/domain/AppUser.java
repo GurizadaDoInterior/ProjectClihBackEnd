@@ -26,6 +26,12 @@ public class AppUser extends BaseEntity {
 	@Column(name = "avatar_url", length = 500)
 	private String avatarUrl;
 
+	@Column(name = "avatar_image")
+	private byte[] avatarImage;
+
+	public byte[] getAvatarImage() { return avatarImage; }
+	public void setAvatarImage(byte[] image) { this.avatarImage = image; }
+
 	@Column(name = "timezone_id", nullable = false, length = 60)
 	private String timezoneId;
 

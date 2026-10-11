@@ -17,10 +17,22 @@ public class UserController {
 
 	private final CurrentUserProvider currentUserProvider;
 	private final UserApplicationService userService;
+	private final com.gurizadadointerior.clih.user.application.ProfilePhotoService photos;
 
-	public UserController(CurrentUserProvider currentUserProvider, UserApplicationService userService) {
+	public UserController(CurrentUserProvider currentUserProvider, UserApplicationService userService, com.gurizadadointerior.clih.user.application.ProfilePhotoService photos) {
+		this.photos = photos;
 		this.currentUserProvider = currentUserProvider;
 		this.userService = userService;
+	}
+
+	public record PhotoRequest(@jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 1400000) String image) {}
+	@org.springframework.web.bind.annotation.PutMapping("/avatar")
+	UserResponse uploadPhoto(@Valid @RequestBody PhotoRequest request) {
+		return UserResponse.from(photos.save(currentUserProvider.getCurrentUser(), request.image()));
+	}
+	@org.springframework.web.bind.annotation.DeleteMapping("/avatar")
+	UserResponse removePhoto() {
+		return UserResponse.from(photos.remove(currentUserProvider.getCurrentUser()));
 	}
 
 	@GetMapping

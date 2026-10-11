@@ -13,6 +13,7 @@ public enum ErrorCode {
 	HABIT_ALREADY_COMPLETED(HttpStatus.CONFLICT, "Esta atividade já foi concluída nesta data."),
 	IDEMPOTENCY_KEY_REUSED(HttpStatus.CONFLICT, "A chave de idempotência já foi usada em outra operação."),
 	INVALID_TIMEZONE(HttpStatus.BAD_REQUEST, "Fuso horário inválido."),
+	INVALID_PROFILE_PHOTO(HttpStatus.BAD_REQUEST, "Escolha uma imagem JPG ou PNG válida de até 1 MB."),
 	INVALID_AVATAR_URL(HttpStatus.BAD_REQUEST, "A imagem do perfil deve usar uma URL HTTPS válida."),
 	INVALID_AUTHENTICATION_SUBJECT(HttpStatus.UNAUTHORIZED, "Identidade de autenticação inválida."),
 	INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "Intervalo de datas inválido."),

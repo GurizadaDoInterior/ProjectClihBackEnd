@@ -21,7 +21,7 @@ public record UserResponse(
 			user.getId(),
 			user.getUsername(),
 			user.getDisplayName(),
-			user.getAvatarUrl(),
+			user.getAvatarImage() == null ? user.getAvatarUrl() : "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(user.getAvatarImage()),
 			user.getTimezoneId(),
 			user.getProfileVisibility(),
 			user.isOnboardingCompleted(),
