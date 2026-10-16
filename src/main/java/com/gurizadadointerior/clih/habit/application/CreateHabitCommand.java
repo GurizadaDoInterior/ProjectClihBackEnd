@@ -21,6 +21,7 @@ public record CreateHabitCommand(
 	LocalTime preferredTime,
 	LocalDate startDate,
 	LocalDate endDate,
-	Set<DayOfWeek> scheduledDays
+	Set<DayOfWeek> scheduledDays,
+    Set<DayPeriod> dayPeriods
 ) {
 }

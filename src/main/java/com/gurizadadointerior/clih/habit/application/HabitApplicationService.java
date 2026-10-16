@@ -47,6 +47,7 @@ public class HabitApplicationService {
 			command.preferredTime(), repository.findMaxPositionByUserId(user.getId()) + 1,
 			startDate, command.endDate(), command.scheduledDays()
 		);
+		if (command.dayPeriods() != null) habit.setDayPeriods(command.dayPeriods());
 		return repository.save(habit);
 	}
 
@@ -66,6 +67,7 @@ public class HabitApplicationService {
 			command.dayPeriod(), command.preferredTime(), command.position(), command.startDate(), command.endDate(),
 			command.scheduledDays(), command.active()
 		);
+		if (command.dayPeriods() != null) habit.setDayPeriods(command.dayPeriods());
 		return repository.save(habit);
 	}
 

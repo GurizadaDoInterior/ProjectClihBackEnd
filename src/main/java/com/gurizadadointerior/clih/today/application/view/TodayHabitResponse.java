@@ -20,6 +20,7 @@ public record TodayHabitResponse(
 	boolean completed,
 	UUID completionId,
 	Instant completedAt,
-	int xpAwarded
+	int xpAwarded,
+    java.util.Set<DayPeriod> dayPeriods
 ) {
 }

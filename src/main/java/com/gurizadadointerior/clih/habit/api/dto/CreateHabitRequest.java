@@ -29,12 +29,13 @@ public record CreateHabitRequest(
 	LocalTime preferredTime,
 	LocalDate startDate,
 	LocalDate endDate,
-	@NotEmpty(message = "selecione ao menos um dia") Set<DayOfWeek> scheduledDays
+	@NotEmpty(message = "selecione ao menos um dia") Set<DayOfWeek> scheduledDays,
+    Set<DayPeriod> dayPeriods
 ) {
 	public CreateHabitCommand toCommand() {
 		return new CreateHabitCommand(
 			areaId, name, description, measurementType, targetValue, unit, dayPeriod,
-			preferredTime, startDate, endDate, scheduledDays
+			preferredTime, startDate, endDate, scheduledDays, dayPeriods
 		);
 	}
 }

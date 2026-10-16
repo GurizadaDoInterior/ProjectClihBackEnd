@@ -51,6 +51,12 @@ public class Habit extends BaseEntity {
 	@Column(name = "day_period", nullable = false, length = 20)
 	private DayPeriod dayPeriod;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "habit_day_periods", joinColumns = @JoinColumn(name = "habit_id"))
+    @Column(name = "day_period", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    private Set<DayPeriod> dayPeriods = new HashSet<>();
+
 	@Column(name = "preferred_time")
 	private LocalTime preferredTime;
 
@@ -105,6 +111,7 @@ public class Habit extends BaseEntity {
 		this.targetValue = targetValue;
 		this.unit = unit;
 		this.dayPeriod = dayPeriod;
+        this.dayPeriods = new HashSet<>(Set.of(dayPeriod));
 		this.preferredTime = preferredTime;
 		this.position = position;
 		this.startDate = startDate;
@@ -134,7 +141,7 @@ public class Habit extends BaseEntity {
 		if (measurementType != null) this.measurementType = measurementType;
 		if (targetValue != null) this.targetValue = targetValue;
 		if (unit != null) this.unit = unit;
-		if (dayPeriod != null) this.dayPeriod = dayPeriod;
+		if (dayPeriod != null) setDayPeriods(Set.of(dayPeriod));
 		if (preferredTime != null) this.preferredTime = preferredTime;
 		if (position != null) this.position = position;
 		if (startDate != null) this.startDate = startDate;
@@ -164,6 +171,16 @@ public class Habit extends BaseEntity {
 	public BigDecimal getTargetValue() { return targetValue; }
 	public String getUnit() { return unit; }
 	public DayPeriod getDayPeriod() { return dayPeriod; }
+    public Set<DayPeriod> getDayPeriods() { return dayPeriods.isEmpty() ? Set.of(dayPeriod) : Set.copyOf(dayPeriods); }
+    public void setDayPeriods(Set<DayPeriod> periods) {
+        if (periods == null || periods.isEmpty() || periods.stream().anyMatch(java.util.Objects::isNull)
+            || (periods.contains(DayPeriod.ANYTIME) && periods.size() > 1)) {
+            throw new com.gurizadadointerior.clih.shared.error.ApiException(
+                com.gurizadadointerior.clih.shared.error.ErrorCode.VALIDATION_ERROR, "Selecione turnos válidos. Sem horário deve ser usado sozinho.");
+        }
+        this.dayPeriods = new HashSet<>(periods);
+        this.dayPeriod = periods.stream().min(java.util.Comparator.naturalOrder()).orElseThrow();
+    }
 	public LocalTime getPreferredTime() { return preferredTime; }
 	public int getPosition() { return position; }
 	public LocalDate getStartDate() { return startDate; }

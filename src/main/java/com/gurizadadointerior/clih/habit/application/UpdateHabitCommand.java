@@ -23,6 +23,7 @@ public record UpdateHabitCommand(
 	LocalDate startDate,
 	LocalDate endDate,
 	Set<DayOfWeek> scheduledDays,
-	Boolean active
+	Boolean active,
+    Set<DayPeriod> dayPeriods
 ) {
 }

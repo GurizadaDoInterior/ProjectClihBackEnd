@@ -4,6 +4,7 @@ public enum MeasurementType {
 	BOOLEAN,
 	COUNT,
 	MINUTES,
+	HOURS,
 	PAGES,
 	DISTANCE_KM,
 	MONEY

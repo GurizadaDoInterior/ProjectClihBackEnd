@@ -74,7 +74,7 @@ public class TodayQueryService {
 				completion != null,
 				completion == null ? null : completion.getId(),
 				completion == null ? null : completion.getCompletedAt(),
-				completion == null ? 0 : completion.getXpAwarded()
+				completion == null ? 0 : completion.getXpAwarded(), habit.getDayPeriods()
 			);
 		}).toList();
 

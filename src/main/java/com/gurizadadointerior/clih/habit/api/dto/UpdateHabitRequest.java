@@ -30,12 +30,13 @@ public record UpdateHabitRequest(
 	LocalDate startDate,
 	LocalDate endDate,
 	@Size(min = 1, message = "selecione ao menos um dia") Set<DayOfWeek> scheduledDays,
-	Boolean active
+	Boolean active,
+    Set<DayPeriod> dayPeriods
 ) {
 	public UpdateHabitCommand toCommand() {
 		return new UpdateHabitCommand(
 			areaId, name, description, measurementType, targetValue, unit, dayPeriod,
-			preferredTime, position, startDate, endDate, scheduledDays, active
+			preferredTime, position, startDate, endDate, scheduledDays, active, dayPeriods
 		);
 	}
 }
