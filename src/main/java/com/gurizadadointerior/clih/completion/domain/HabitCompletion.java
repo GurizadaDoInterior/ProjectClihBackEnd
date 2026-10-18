@@ -1,5 +1,7 @@
 package com.gurizadadointerior.clih.completion.domain;
 
+import com.gurizadadointerior.clih.habit.domain.DayPeriod;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,6 +22,12 @@ public class HabitCompletion extends BaseEntity {
 
 	@Column(name = "habit_id", nullable = false)
 	private UUID habitId;
+
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "day_period", nullable = false, length = 20)
+    private DayPeriod dayPeriod;
+    public DayPeriod getDayPeriod() { return dayPeriod; }
+    public void setDayPeriod(DayPeriod period) { this.dayPeriod = period; }
 
 	@Column(name = "activity_date", nullable = false)
 	private LocalDate activityDate;

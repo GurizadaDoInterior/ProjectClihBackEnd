@@ -22,4 +22,10 @@ class UserApplicationServiceTest {
 			.extracting(exception -> ((ApiException) exception).getErrorCode())
 			.isEqualTo(ErrorCode.INVALID_AVATAR_URL);
 	}
+
+    @Test void onboardingRequiresUsername() {
+        assertThatThrownBy(() -> service.update(new AppUser("subject"),
+            new UpdateUserCommand(null, "Teste", null, "UTC", null, true)))
+            .isInstanceOf(ApiException.class);
+    }
 }

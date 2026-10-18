@@ -1,5 +1,7 @@
 package com.gurizadadointerior.clih.completion.domain;
 
+import com.gurizadadointerior.clih.habit.domain.DayPeriod;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +11,7 @@ public interface HabitCompletionRepository {
 
 	Optional<HabitCompletion> findByUserIdAndIdempotencyKey(UUID userId, String idempotencyKey);
 
-	boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate activityDate);
+	boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate activityDate, DayPeriod dayPeriod);
 
 	List<HabitCompletion> findAllByUserIdAndActivityDate(UUID userId, LocalDate activityDate);
 

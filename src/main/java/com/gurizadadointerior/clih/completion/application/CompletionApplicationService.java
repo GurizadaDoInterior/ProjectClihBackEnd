@@ -55,7 +55,7 @@ public class CompletionApplicationService {
 		var normalizedKey = idempotencyKey.trim();
 		var existing = repository.findByUserIdAndIdempotencyKey(user.getId(), normalizedKey);
 		if (existing.isPresent()) {
-			if (!existing.get().getHabitId().equals(habitId)) {
+			if (!existing.get().getHabitId().equals(habitId) || (command.dayPeriod() != null && command.dayPeriod() != existing.get().getDayPeriod())) {
 				throw new ApiException(ErrorCode.IDEMPOTENCY_KEY_REUSED);
 			}
 			if (existing.get().isUndone()) throw new ApiException(ErrorCode.COMPLETION_UNDONE);
@@ -63,6 +63,8 @@ public class CompletionApplicationService {
 		}
 
 		var habit = habitService.getOwnedActive(user.getId(), habitId);
+		var period = command.dayPeriod() == null ? habit.getDayPeriod() : command.dayPeriod();
+        if (!habit.getDayPeriods().contains(period)) throw new ApiException(ErrorCode.VALIDATION_ERROR, "Turno não selecionado para esta atividade.");
 		var now = Instant.now(clock);
 		var completedAt = command.completedAt() == null ? now : command.completedAt();
 		validateCompletionTime(completedAt, now);
@@ -77,7 +79,7 @@ public class CompletionApplicationService {
 				Map.of("activityDate", activityDate));
 		}
 
-		if (repository.existsByUserIdAndHabitIdAndActivityDate(user.getId(), habitId, activityDate)) {
+		if (repository.existsByUserIdAndHabitIdAndActivityDate(user.getId(), habitId, activityDate, period)) {
 			throw new ApiException(ErrorCode.HABIT_ALREADY_COMPLETED);
 		}
 
@@ -87,10 +89,12 @@ public class CompletionApplicationService {
 				Map.of("targetValue", habit.getTargetValue(), "achievedValue", achievedValue));
 		}
 
-		var completion = repository.saveAndFlush(new HabitCompletion(
+		var completion = new HabitCompletion(
 			user.getId(), habitId, activityDate, completedAt, achievedValue, normalizedKey,
 			command.note() == null ? null : command.note().trim()
-		));
+		);
+        completion.setDayPeriod(period);
+        completion = repository.saveAndFlush(completion);
 
 		var streak = streakCalculator.calculate(repository.findDistinctActivityDatesByUserId(user.getId()), today);
 		var reward = rewardService.awardHabitCompletion(user.getId(), habit, completion.getId(), streak);

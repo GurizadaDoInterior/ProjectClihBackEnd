@@ -1,5 +1,7 @@
 package com.gurizadadointerior.clih.today.application;
 
+import com.gurizadadointerior.clih.habit.domain.DayPeriod;
+
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -59,24 +61,24 @@ public class TodayQueryService {
 	public TodayResponse getDay(AppUser user, LocalDate date) {
 		var allHabits = habitService.findAllActive(user);
 		var habits = allHabits.stream().filter(habit -> habit.isScheduledFor(date)).toList();
-		Map<java.util.UUID, HabitCompletion> completions = completionRepository
+		Map<String, HabitCompletion> completions = completionRepository
 			.findAllByUserIdAndActivityDate(user.getId(), date)
 			.stream()
-			.collect(Collectors.toMap(HabitCompletion::getHabitId, Function.identity()));
+			.collect(Collectors.toMap(c -> occurrenceKey(c.getHabitId(), c.getDayPeriod()), Function.identity()));
 		var areas = areaService.list(user).stream()
 			.collect(Collectors.toMap(area -> area.getId(), TodayAreaResponse::from));
 
-		var items = habits.stream().map(habit -> {
-			var completion = completions.get(habit.getId());
+		var items = habits.stream().flatMap(habit -> habit.getDayPeriods().stream().sorted().map(period -> {
+			var completion = completions.get(occurrenceKey(habit.getId(), period));
 			return new TodayHabitResponse(
 				habit.getId(), habit.getName(), areas.get(habit.getAreaId()), habit.getMeasurementType(),
-				habit.getTargetValue(), habit.getUnit(), habit.getDayPeriod(), habit.getPreferredTime(),
+				habit.getTargetValue(), habit.getUnit(), period, habit.getPreferredTime(),
 				completion != null,
 				completion == null ? null : completion.getId(),
 				completion == null ? null : completion.getCompletedAt(),
-				completion == null ? 0 : completion.getXpAwarded(), habit.getDayPeriods()
+				completion == null ? 0 : completion.getXpAwarded(), Set.of(period), period
 			);
-		}).toList();
+		})).toList();
 
 		var completed = Math.toIntExact(items.stream().filter(TodayHabitResponse::completed).count());
 		var percentage = items.isEmpty() ? 0 : (int) Math.round((completed * 100.0) / items.size());
@@ -97,12 +99,12 @@ public class TodayQueryService {
 	private List<TodayWeekDayResponse> buildWeek(AppUser user, LocalDate selectedDate, List<Habit> habits) {
 		var start = selectedDate.with(DayOfWeek.MONDAY);
 		var end = start.plusDays(6);
-		Map<LocalDate, Set<UUID>> completedByDate = completionRepository
+		Map<LocalDate, Set<String>> completedByDate = completionRepository
 			.findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(user.getId(), start, end)
 			.stream()
 			.collect(Collectors.groupingBy(
 				HabitCompletion::getActivityDate,
-				Collectors.mapping(HabitCompletion::getHabitId, Collectors.toSet())
+				Collectors.mapping(c -> occurrenceKey(c.getHabitId(), c.getDayPeriod()), Collectors.toSet())
 			));
 		var today = LocalDate.now(clock.withZone(user.zoneId()));
 
@@ -111,7 +113,7 @@ public class TodayQueryService {
 			.map(day -> {
 				var plannedHabitIds = habits.stream()
 					.filter(habit -> habit.isScheduledFor(day))
-					.map(Habit::getId)
+					.flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period)))
 					.collect(Collectors.toSet());
 				var planned = plannedHabitIds.size();
 				var completed = Math.toIntExact(completedByDate.getOrDefault(day, Set.of()).stream()
@@ -134,20 +136,23 @@ public class TodayQueryService {
 	private List<AreaProgressView> buildAreaProgress(
 		Map<UUID, TodayAreaResponse> areas,
 		List<Habit> habits,
-		Map<UUID, HabitCompletion> completions
+		Map<String, HabitCompletion> completions
 	) {
 		return areas.values().stream()
 			.sorted(Comparator.comparingInt(TodayAreaResponse::position))
 			.map(area -> {
-				var planned = Math.toIntExact(habits.stream().filter(habit -> habit.getAreaId().equals(area.id())).count());
+				var planned = habits.stream().filter(habit -> habit.getAreaId().equals(area.id())).mapToInt(habit -> habit.getDayPeriods().size()).sum();
 				var completed = Math.toIntExact(habits.stream()
 					.filter(habit -> habit.getAreaId().equals(area.id()))
-					.filter(habit -> completions.containsKey(habit.getId()))
+					.flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period)))
+                    .filter(completions::containsKey)
 					.count());
 				return new AreaProgressView(area, planned, completed, percentage(completed, planned));
 			})
 			.toList();
 	}
+
+    private static String occurrenceKey(UUID id, DayPeriod period) { return id + ":" + period; }
 
 	private DayStatus statusFor(LocalDate date, LocalDate today, int planned, int completed) {
 		if (date.isAfter(today)) return DayStatus.FUTURE;

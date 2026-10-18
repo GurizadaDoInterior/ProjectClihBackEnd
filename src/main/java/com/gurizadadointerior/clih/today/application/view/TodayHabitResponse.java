@@ -21,6 +21,7 @@ public record TodayHabitResponse(
 	UUID completionId,
 	Instant completedAt,
 	int xpAwarded,
-    java.util.Set<DayPeriod> dayPeriods
+    java.util.Set<DayPeriod> dayPeriods,
+    DayPeriod completionPeriod
 ) {
 }

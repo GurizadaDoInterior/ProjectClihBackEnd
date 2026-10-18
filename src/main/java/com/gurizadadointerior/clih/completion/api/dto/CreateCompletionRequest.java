@@ -1,5 +1,7 @@
 package com.gurizadadointerior.clih.completion.api.dto;
 
+import com.gurizadadointerior.clih.habit.domain.DayPeriod;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -12,9 +14,10 @@ public record CreateCompletionRequest(
 	@Positive(message = "deve ser maior que zero")
 	@Digits(integer = 10, fraction = 2, message = "deve ter até 10 inteiros e 2 casas decimais") BigDecimal achievedValue,
 	Instant completedAt,
-	@Size(max = 500, message = "deve ter no máximo 500 caracteres") String note
+	@Size(max = 500, message = "deve ter no máximo 500 caracteres") String note,
+    DayPeriod dayPeriod
 ) {
 	public CompleteHabitCommand toCommand() {
-		return new CompleteHabitCommand(achievedValue, completedAt, note);
+		return new CompleteHabitCommand(achievedValue, completedAt, note, dayPeriod);
 	}
 }

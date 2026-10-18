@@ -31,6 +31,11 @@ public class UserApplicationService {
 	@Transactional
 	public AppUser update(AppUser user, UpdateUserCommand command) {
 		var normalizedUsername = normalizeUsername(command.username());
+        var effectiveUsername = normalizedUsername == null ? user.getUsername() : normalizedUsername;
+        if ((command.username() != null || command.displayName() != null || Boolean.TRUE.equals(command.completeOnboarding()))
+            && (effectiveUsername == null || !effectiveUsername.matches("^[a-z0-9._]{3,30}$"))) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "Informe um nome de usuário com 3 a 30 caracteres.");
+        }
 		if (normalizedUsername != null && repository.existsByUsernameIgnoreCaseAndIdNot(normalizedUsername, user.getId())) {
 			throw new ApiException(ErrorCode.USERNAME_ALREADY_TAKEN);
 		}

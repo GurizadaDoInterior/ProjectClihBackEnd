@@ -1,5 +1,7 @@
 package com.gurizadadointerior.clih.completion.infrastructure.persistence;
 
+import com.gurizadadointerior.clih.habit.domain.DayPeriod;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +29,8 @@ class JpaHabitCompletionRepositoryAdapter implements HabitCompletionRepository {
 	}
 
 	@Override
-	public boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate date) {
-		return repository.existsByUserIdAndHabitIdAndActivityDateAndUndoneAtIsNull(userId, habitId, date);
+	public boolean existsByUserIdAndHabitIdAndActivityDate(UUID userId, UUID habitId, LocalDate date, DayPeriod dayPeriod) {
+		return repository.existsByUserIdAndHabitIdAndActivityDateAndDayPeriodAndUndoneAtIsNull(userId, habitId, date, dayPeriod);
 	}
 
 	@Override
@@ -60,7 +62,7 @@ class JpaHabitCompletionRepositoryAdapter implements HabitCompletionRepository {
 interface SpringDataHabitCompletionRepository extends JpaRepository<HabitCompletion, UUID> {
 	Optional<HabitCompletion> findByIdAndUserIdAndHabitId(UUID id, UUID userId, UUID habitId);
 	Optional<HabitCompletion> findByUserIdAndIdempotencyKey(UUID userId, String key);
-	boolean existsByUserIdAndHabitIdAndActivityDateAndUndoneAtIsNull(UUID userId, UUID habitId, LocalDate date);
+	boolean existsByUserIdAndHabitIdAndActivityDateAndDayPeriodAndUndoneAtIsNull(UUID userId, UUID habitId, LocalDate date, DayPeriod dayPeriod);
 	List<HabitCompletion> findAllByUserIdAndActivityDateAndUndoneAtIsNull(UUID userId, LocalDate date);
 	List<HabitCompletion> findAllByUserIdAndActivityDateBetweenAndUndoneAtIsNullOrderByActivityDateAsc(UUID userId, LocalDate start, LocalDate end);
 
