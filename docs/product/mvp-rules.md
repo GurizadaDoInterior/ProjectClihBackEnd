@@ -12,7 +12,7 @@ Estas regras evitam interpretações diferentes no mobile e no backend. Mudança
 
 ## Conclusão
 
-- No MVP, um hábito pode ter no máximo uma conclusão por dia.
+- Cada hábito pode ter uma conclusão por turno selecionado em cada dia agendado. Os dias da semana se repetem sem prazo final, até o hábito ser arquivado.
 - O valor realizado precisa atingir a meta configurada.
 - A data da atividade é calculada com o fuso do usuário.
 - Uma conclusão pode ser sincronizada até 14 dias depois.

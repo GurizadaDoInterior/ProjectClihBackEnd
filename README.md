@@ -180,3 +180,6 @@ Leia, nesta ordem:
 ## Foto de perfil
 
 PUT /api/v1/me/avatar recebe JSON com image no formato data:image/jpeg;base64,... (até 1,4 milhão de caracteres). A imagem é validada, recortada no centro e regravada em JPEG de 512×512; os bytes são persistidos no PostgreSQL pela migração V5. GET /me retorna a foto em avatarUrl como data URI, mantendo a leitura sob a identidade autenticada sem expor arquivos públicos. DELETE /me/avatar remove a foto. O aplicativo permite escolher, trocar e remover em Editar perfil.
+
+Conclusões por turno: envie dayPeriod ao criar uma conclusão. Cada turno selecionado possui conclusão, cancelamento e XP independentes; /today retorna uma linha por turno com completionPeriod. O nome de usuário é obrigatório ao salvar o perfil ou concluir o cadastro.
+
