@@ -31,6 +31,7 @@ Dependências aceitáveis neste estágio:
 
 ```text
 today → user, area, habit, completion, reward
+evolution → user, area, habit, completion, reward, sleep
 completion → habit, reward, user
 habit → area, user
 area → user
@@ -75,6 +76,8 @@ Toda concessão de XP cria um registro em `point_transactions`, nome preservado 
 O namespace oficial é `com.gurizadadointerior.clih`. A migração V1 original permanece imutável; a V2 adiciona o modelo mais completo sem remover colunas antigas e a V3 reforça isolamento de proprietário, constraints de domínio e versionamento otimista. Essa escolha permite atualizar bancos existentes e mantém o histórico do Git e do Flyway coerentes.
 
 Áreas possuem `slug` estável e posição, e hábitos também possuem posição manual. O endpoint `/api/v1/today` fornece a rotina, a semana real e o progresso por área, sem estados simulados.
+
+O endpoint `/api/v1/evolution` é um modelo de leitura mensal. Ele combina hábitos, conclusões, progresso e sono sem persistir uma cópia desses dados. Dias sem atividades planejadas usam percentual nulo, e dias sem registro de sono não reduzem artificialmente a média de sete dias.
 
 ## Exclusão
 
