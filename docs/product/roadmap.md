@@ -11,6 +11,7 @@
 - Usuário, áreas, hábitos, conclusões, XP, nível e sequência.
 - Histórico diário de sono com duração, qualidade e proteção por usuário.
 - Endpoint agregado da tela do dia, semana e progresso por área.
+- Endpoint mensal de evolução com calendário, sono e detalhamento diário.
 
 ## 1. Identidade e onboarding
 
@@ -44,8 +45,7 @@
 
 ## 5. Relatórios
 
-- Evoluir o progresso semanal básico já disponível.
-- Calendário de consistência.
+- Evoluir o calendário mensal e o progresso semanal já disponíveis.
 - Evoluir a distribuição diária por área para períodos maiores.
 - Retrospectiva semanal.
 - Consultas otimizadas conforme dados reais de uso.

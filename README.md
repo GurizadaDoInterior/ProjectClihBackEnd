@@ -110,6 +110,7 @@ Se o mobile repetir a mesma chamada por perda de conexão, deve repetir a mesma 
 | GET | `/api/v1/sleep/{date}` | Consultar o sono de um dia |
 | PUT | `/api/v1/sleep/{date}` | Criar ou atualizar o sono de um dia |
 | DELETE | `/api/v1/sleep/{date}` | Excluir o sono de um dia |
+| GET | `/api/v1/evolution?month={yyyy-MM}&selectedDate={date}` | Montar calendário, sono e progresso por área |
 
 ## Organização do código
 
