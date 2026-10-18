@@ -87,7 +87,7 @@ public class EvolutionQueryService {
 		var selectedDay = buildSelectedDay(selectedDate, selectedHabits, selectedCompletions, areasById, sleepByDate);
 		var sleepComparison = buildSleepComparison(comparisonStart, selectedDate, sleepByDate);
 		var areaProgress = buildAreaProgress(areas, selectedHabits, selectedCompletions);
-		var progress = rewardService.getProgress(user.getId());
+		var progress = rewardService.getProgress(user.getId()).withHistory(completionRepository.findDistinctActivityDatesByUserId(user.getId()),today);
 		var todayCompletions = completionsForToday(user, today, month, completionsByDate);
 		var completedToday = completedCount(scheduledFor(habits, today), todayCompletions);
 		var activeDays = Math.toIntExact(calendar.stream().filter(day -> day.completedActivities() > 0).count());
@@ -139,8 +139,8 @@ public class EvolutionQueryService {
 			.mapToObj(month::atDay)
 			.map(date -> {
 				var scheduled = scheduledFor(habits, date);
-				var completed = completedCount(scheduled, completionsByDate.getOrDefault(date, Map.of()));
-				var planned = plannedCount(scheduled);
+				var completed = completionsByDate.getOrDefault(date, Map.of()).size();
+				var planned = Math.max(plannedCount(scheduled),completed);
 				var sleep = sleepByDate.get(date);
 				return new CalendarDayView(
 					date,

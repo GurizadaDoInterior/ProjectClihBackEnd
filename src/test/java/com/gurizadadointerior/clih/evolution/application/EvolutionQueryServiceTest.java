@@ -63,6 +63,7 @@ class EvolutionQueryServiceTest {
 		when(user.getId()).thenReturn(userId);
 		when(user.zoneId()).thenReturn(ZoneId.of("America/Sao_Paulo"));
 		when(rewardService.getProgress(userId)).thenReturn(new ProgressView(250, 3, 200, 300, 3, 8, null));
+		when(completionRepository.findDistinctActivityDatesByUserId(userId)).thenReturn(List.of(LocalDate.of(2026,10,16),LocalDate.of(2026,10,17),LocalDate.of(2026,10,18)));
 		var clock = Clock.fixed(Instant.parse("2026-10-18T12:00:00Z"), ZoneOffset.UTC);
 		service = new EvolutionQueryService(
 			habitService, completionRepository, areaService, rewardService, sleepRepository, clock

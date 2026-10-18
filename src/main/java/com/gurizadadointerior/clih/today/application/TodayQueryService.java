@@ -88,7 +88,7 @@ public class TodayQueryService {
 		return new TodayResponse(
 			date,
 			user.getDisplayName(),
-			rewardService.getProgress(user.getId()),
+			rewardService.getProgress(user.getId()).withHistory(completionRepository.findDistinctActivityDatesByUserId(user.getId()),LocalDate.now(clock.withZone(user.zoneId()))),
 			new TodaySummaryResponse(items.size(), completed, percentage),
 			week,
 			areaProgress,
@@ -115,10 +115,8 @@ public class TodayQueryService {
 					.filter(habit -> habit.isScheduledFor(day))
 					.flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period)))
 					.collect(Collectors.toSet());
-				var planned = plannedHabitIds.size();
-				var completed = Math.toIntExact(completedByDate.getOrDefault(day, Set.of()).stream()
-					.filter(plannedHabitIds::contains)
-					.count());
+				var completed = completedByDate.getOrDefault(day, Set.of()).size();
+                var planned = Math.max(plannedHabitIds.size(),completed);
 				var progress = percentage(completed, planned);
 				return new TodayWeekDayResponse(
 					day,

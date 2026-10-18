@@ -9,6 +9,7 @@ public class StreakCalculator {
 
 	public ProgressSnapshot calculate(Collection<LocalDate> activityDates, LocalDate today) {
 		List<LocalDate> dates = activityDates.stream()
+			.filter(date -> !date.isAfter(today))
 			.distinct()
 			.sorted(Comparator.reverseOrder())
 			.toList();
