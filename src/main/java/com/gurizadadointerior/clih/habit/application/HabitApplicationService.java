@@ -76,6 +76,17 @@ public class HabitApplicationService {
 		getOwnedActive(user.getId(), habitId).archive(Instant.now(clock));
 	}
 
+    @Transactional
+    public void archivePeriod(AppUser user, UUID habitId, DayPeriod period) {
+        var habit = getOwnedActive(user.getId(), habitId);
+        if (period == null) { habit.archive(Instant.now(clock)); return; }
+        var remaining = new java.util.HashSet<>(habit.getDayPeriods());
+        if (!remaining.remove(period)) return;
+        if (remaining.isEmpty()) habit.archive(Instant.now(clock));
+        else habit.setDayPeriods(remaining);
+        repository.save(habit);
+    }
+
 	@Transactional(readOnly = true)
 	public Habit getOwnedActive(UUID userId, UUID habitId) {
 		return repository.findByIdAndUserIdAndArchivedAtIsNull(habitId, userId)

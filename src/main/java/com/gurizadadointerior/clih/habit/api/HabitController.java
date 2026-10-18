@@ -50,8 +50,8 @@ public class HabitController {
 	}
 
 	@DeleteMapping("/{habitId}")
-	ResponseEntity<Void> archive(@PathVariable UUID habitId) {
-		habitService.archive(currentUserProvider.getCurrentUser(), habitId);
+	ResponseEntity<Void> archive(@PathVariable UUID habitId, @org.springframework.web.bind.annotation.RequestParam(required = false) com.gurizadadointerior.clih.habit.domain.DayPeriod dayPeriod) {
+		habitService.archivePeriod(currentUserProvider.getCurrentUser(), habitId, dayPeriod);
 		return ResponseEntity.noContent().build();
 	}
 }
