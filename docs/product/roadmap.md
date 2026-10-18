@@ -9,6 +9,7 @@
 - Estrutura DDD pragmática por contexto e proteção multiusuário no banco.
 - Erros, OpenAPI, testes e CI.
 - Usuário, áreas, hábitos, conclusões, XP, nível e sequência.
+- Histórico diário de sono com duração, qualidade e proteção por usuário.
 - Endpoint agregado da tela do dia, semana e progresso por área.
 
 ## 1. Identidade e onboarding
@@ -19,9 +20,10 @@
 - Modelar preferências escolhidas no onboarding.
 - Adicionar exclusão e desativação da conta.
 
-## 2. Sono e diário
+## 2. Diário e evolução do sono
 
-- `sleep_records`: início, fim, duração, qualidade e observação.
+- Integrar o histórico de sono ao calendário e aos relatórios de evolução.
+- Avaliar a inclusão de uma observação opcional no registro de sono.
 - `journal_entries`: data, emoção e texto privado.
 - Garantir no máximo um registro de cada tipo por dia.
 - Definir política de criptografia e acesso ao texto do diário.
