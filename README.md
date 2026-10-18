@@ -106,6 +106,10 @@ Se o mobile repetir a mesma chamada por perda de conexão, deve repetir a mesma 
 | GET | `/api/v1/today` | Montar a tela principal do dia |
 | POST | `/api/v1/habits/{id}/completions` | Concluir uma atividade |
 | GET | `/api/v1/progress` | Consultar XP, nível e sequência |
+| GET | `/api/v1/sleep?from={date}&to={date}` | Consultar o histórico de sono |
+| GET | `/api/v1/sleep/{date}` | Consultar o sono de um dia |
+| PUT | `/api/v1/sleep/{date}` | Criar ou atualizar o sono de um dia |
+| DELETE | `/api/v1/sleep/{date}` | Excluir o sono de um dia |
 
 ## Organização do código
 
@@ -143,7 +147,7 @@ As dependências apontam de fora para dentro: `api` e `infrastructure` conhecem 
 - Configurações por ambiente: `application.yml`, `application-local.yml` e `application-prod.yml`.
 - Estrutura do banco: crie uma nova migração em `src/main/resources/db/migration`.
 
-`V1__initial_schema.sql` é a migração original publicada no repositório. `V2__evolve_mvp_core.sql` evolui esse esquema sem apagar os campos legados. `V3__enforce_tenant_integrity.sql` impede relações entre dados de usuários diferentes e adiciona controle de concorrência. Nunca edite migrações compartilhadas. A próxima deve ser, por exemplo, `V4__add_sleep_records.sql`.
+`V1__initial_schema.sql` é a migração original publicada no repositório. As migrações seguintes evoluem o esquema sem reescrever o histórico já aplicado. A `V6__sleep_history.sql` cria o histórico diário de sono e a `V8__habit_multiple_periods.sql` permite mais de um turno por atividade. Nunca edite migrações compartilhadas; crie a próxima versão disponível para cada nova alteração.
 
 ## Produção
 

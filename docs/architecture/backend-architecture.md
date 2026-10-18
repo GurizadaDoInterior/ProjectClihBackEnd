@@ -35,6 +35,7 @@ completion → habit, reward, user
 habit → area, user
 area → user
 identity → user
+sleep → user
 ```
 
 Evite dependências circulares. Quando duas funcionalidades começarem a depender uma da outra, extraia uma política ou um serviço de leitura com responsabilidade clara.
@@ -51,6 +52,7 @@ O modo `local` existe para desenvolvimento e falha ao iniciar sem o perfil `loca
 
 - `Instant` representa momentos absolutos, como `completedAt`.
 - `LocalDate` representa o dia percebido pelo usuário, como `activityDate`.
+- O registro de sono usa `LocalTime` e calcula no domínio a duração que atravessa a meia-noite.
 - O perfil armazena um fuso IANA, como `America/Sao_Paulo`.
 - O servidor usa UTC internamente.
 
