@@ -170,6 +170,25 @@ class EvolutionQueryServiceTest {
 		verifyNoInteractions(habitService, completionRepository, areaService, rewardService, sleepRepository);
 	}
 
+    @Test void countsEachPeriodIndependently() {
+        var date = LocalDate.of(2026,10,18);
+        var habitId = UUID.randomUUID(); var areaId = UUID.randomUUID();
+        var habit = dailyHabit(habitId,areaId);
+        when(habit.getDayPeriods()).thenReturn(Set.of(DayPeriod.MORNING,DayPeriod.EVENING));
+        when(habitService.findAllActive(user)).thenReturn(List.of(habit));
+        var testArea = area(areaId);
+        var testCompletion = completion(habitId,date);
+        when(areaService.list(user)).thenReturn(List.of(testArea));
+        when(completionRepository.findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(userId,date.withDayOfMonth(1),date.withDayOfMonth(31))).thenReturn(List.of(testCompletion));
+        var response=service.getEvolution(user,YearMonth.of(2026,10),date);
+        assertEquals(2,response.selectedDay().activities().size());
+        assertEquals(1,response.selectedDay().activities().stream().filter(a -> a.completed()).count());
+        var day=response.calendar().stream().filter(d -> d.date().equals(date)).findFirst().orElseThrow();
+        assertEquals(2,day.plannedActivities());
+        assertEquals(1,day.completedActivities());
+        assertEquals(EvolutionDayStatus.PARTIAL,day.status());
+    }
+
 	private Habit dailyHabit(UUID habitId, UUID areaId) {
 		var habit = mock(Habit.class);
 		when(habit.getId()).thenReturn(habitId);
@@ -193,6 +212,7 @@ class EvolutionQueryServiceTest {
 		var completion = mock(HabitCompletion.class);
 		when(completion.getId()).thenReturn(UUID.randomUUID());
 		when(completion.getHabitId()).thenReturn(habitId);
+        when(completion.getDayPeriod()).thenReturn(DayPeriod.MORNING);
 		when(completion.getActivityDate()).thenReturn(date);
 		when(completion.getCompletedAt()).thenReturn(Instant.parse("2026-10-17T12:00:00Z"));
 		return completion;

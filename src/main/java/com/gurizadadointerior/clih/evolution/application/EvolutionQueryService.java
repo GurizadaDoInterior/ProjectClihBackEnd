@@ -121,10 +121,10 @@ public class EvolutionQueryService {
 		return selectedDate;
 	}
 
-	private Map<LocalDate, Map<UUID, HabitCompletion>> groupCompletions(List<HabitCompletion> completions) {
+	private Map<LocalDate, Map<String, HabitCompletion>> groupCompletions(List<HabitCompletion> completions) {
 		return completions.stream().collect(Collectors.groupingBy(
 			HabitCompletion::getActivityDate,
-			Collectors.toMap(HabitCompletion::getHabitId, Function.identity(), (first, ignored) -> first)
+			Collectors.toMap(c -> occurrenceKey(c.getHabitId(), c.getDayPeriod()), Function.identity(), (first, ignored) -> first)
 		));
 	}
 
@@ -132,7 +132,7 @@ public class EvolutionQueryService {
 		YearMonth month,
 		LocalDate today,
 		List<Habit> habits,
-		Map<LocalDate, Map<UUID, HabitCompletion>> completionsByDate,
+		Map<LocalDate, Map<String, HabitCompletion>> completionsByDate,
 		Map<LocalDate, SleepRecord> sleepByDate
 	) {
 		return IntStream.rangeClosed(1, month.lengthOfMonth())
@@ -140,7 +140,7 @@ public class EvolutionQueryService {
 			.map(date -> {
 				var scheduled = scheduledFor(habits, date);
 				var completed = completedCount(scheduled, completionsByDate.getOrDefault(date, Map.of()));
-				var planned = scheduled.size();
+				var planned = plannedCount(scheduled);
 				var sleep = sleepByDate.get(date);
 				return new CalendarDayView(
 					date,
@@ -159,13 +159,13 @@ public class EvolutionQueryService {
 	private SelectedDayView buildSelectedDay(
 		LocalDate date,
 		List<Habit> habits,
-		Map<UUID, HabitCompletion> completions,
+		Map<String, HabitCompletion> completions,
 		Map<UUID, Area> areas,
 		Map<LocalDate, SleepRecord> sleepByDate
 	) {
-		var activities = habits.stream().map(habit -> {
+		var activities = habits.stream().flatMap(habit -> habit.getDayPeriods().stream().sorted().map(period -> {
 			var area = areas.get(habit.getAreaId());
-			var completion = completions.get(habit.getId());
+			var completion = completions.get(occurrenceKey(habit.getId(), period));
 			return new SelectedActivityView(
 				habit.getId(),
 				habit.getName(),
@@ -173,13 +173,13 @@ public class EvolutionQueryService {
 				area == null ? null : area.getName(),
 				area == null ? null : area.getColor(),
 				area == null ? null : area.getIcon(),
-				habit.getDayPeriods(),
+				java.util.Set.of(period),
 				habit.getPreferredTime(),
 				completion != null,
 				completion == null ? null : completion.getId(),
 				completion == null ? null : completion.getCompletedAt()
 			);
-		}).toList();
+		})).toList();
 		var sleep = sleepByDate.get(date);
 		return new SelectedDayView(date, sleep == null ? null : SleepDayView.from(sleep), activities);
 	}
@@ -206,7 +206,7 @@ public class EvolutionQueryService {
 	private List<EvolutionAreaView> buildAreaProgress(
 		List<Area> areas,
 		List<Habit> habits,
-		Map<UUID, HabitCompletion> completions
+		Map<String, HabitCompletion> completions
 	) {
 		return areas.stream().map(area -> {
 			var areaHabits = habits.stream().filter(habit -> habit.getAreaId().equals(area.getId())).toList();
@@ -216,33 +216,36 @@ public class EvolutionQueryService {
 				area.getName(),
 				area.getColor(),
 				area.getIcon(),
-				areaHabits.size(),
+				plannedCount(areaHabits),
 				completed,
-				percentage(completed, areaHabits.size())
+				percentage(completed, plannedCount(areaHabits))
 			);
 		}).toList();
 	}
 
-	private Map<UUID, HabitCompletion> completionsForToday(
+	private Map<String, HabitCompletion> completionsForToday(
 		AppUser user,
 		LocalDate today,
 		YearMonth requestedMonth,
-		Map<LocalDate, Map<UUID, HabitCompletion>> completionsByDate
+		Map<LocalDate, Map<String, HabitCompletion>> completionsByDate
 	) {
 		if (requestedMonth.equals(YearMonth.from(today))) {
 			return completionsByDate.getOrDefault(today, Map.of());
 		}
 		return completionRepository.findAllByUserIdAndActivityDate(user.getId(), today).stream()
-			.collect(Collectors.toMap(HabitCompletion::getHabitId, Function.identity(), (first, ignored) -> first));
+			.collect(Collectors.toMap(c -> occurrenceKey(c.getHabitId(), c.getDayPeriod()), Function.identity(), (first, ignored) -> first));
 	}
 
 	private List<Habit> scheduledFor(List<Habit> habits, LocalDate date) {
 		return habits.stream().filter(habit -> habit.isScheduledFor(date)).toList();
 	}
 
-	private int completedCount(List<Habit> habits, Map<UUID, HabitCompletion> completions) {
-		return Math.toIntExact(habits.stream().filter(habit -> completions.containsKey(habit.getId())).count());
+	private int completedCount(List<Habit> habits, Map<String, HabitCompletion> completions) {
+		return Math.toIntExact(habits.stream().flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period))).filter(completions::containsKey).count());
 	}
+
+    private int plannedCount(List<Habit> habits) { return habits.stream().mapToInt(h -> h.getDayPeriods().size()).sum(); }
+    private String occurrenceKey(UUID id, com.gurizadadointerior.clih.habit.domain.DayPeriod period) { return id + ":" + period; }
 
 	private Integer percentage(int completed, int planned) {
 		return planned == 0 ? null : (int) Math.round((completed * 100.0) / planned);
