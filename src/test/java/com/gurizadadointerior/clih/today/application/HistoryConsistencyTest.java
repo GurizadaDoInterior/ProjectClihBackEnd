@@ -26,6 +26,7 @@ class HistoryConsistencyTest {
   var service=new TodayQueryService(habits,completions,areas,rewards,Clock.fixed(date.atTime(12,0).toInstant(ZoneOffset.UTC),ZoneOffset.UTC));
   var summary=service.getDay(user,date);
   assertThat(summary.progress().currentStreak()).isEqualTo(3);
+  assertThat(summary.progress().longestStreak()).isEqualTo(3);
   assertThat(summary.week().stream().filter(day->day.completed()>0).count()).isEqualTo(3);
   assertThat(summary.habits()).isEmpty();
  }

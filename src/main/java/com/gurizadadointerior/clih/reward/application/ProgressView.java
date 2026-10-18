@@ -11,6 +11,6 @@ public record ProgressView(
  public ProgressView withHistory(Collection<LocalDate> dates, LocalDate today) {
   var actual = new StreakCalculator().calculate(dates,today);
   return new ProgressView(totalXp,level,xpForCurrentLevel,xpForNextLevel,
-   actual.currentStreak(),Math.max(longestStreak,actual.longestStreak()),actual.lastActiveDate());
+   actual.currentStreak(),actual.longestStreak(),actual.lastActiveDate());
  }
 }

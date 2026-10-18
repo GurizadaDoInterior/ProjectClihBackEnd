@@ -107,7 +107,7 @@ class EvolutionQueryServiceTest {
 		assertEquals(1, response.summary().activeDaysInMonth());
 		assertEquals(0, response.summary().activitiesCompletedToday());
 		assertEquals(3, response.summary().currentStreak());
-		assertEquals(8, response.summary().longestStreak());
+		assertEquals(3, response.summary().longestStreak());
 		assertEquals(390, response.selectedDay().sleep().durationMinutes());
 		assertEquals(1, response.selectedDay().activities().size());
 		assertTrue(response.selectedDay().activities().getFirst().completed());
