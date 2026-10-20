@@ -26,8 +26,10 @@ public class HabitController {
 
 	private final CurrentUserProvider currentUserProvider;
 	private final HabitApplicationService habitService;
+    private final com.gurizadadointerior.clih.habit.application.OccurrenceCancellationService cancellations;
 
-	public HabitController(CurrentUserProvider currentUserProvider, HabitApplicationService habitService) {
+	public HabitController(CurrentUserProvider currentUserProvider, HabitApplicationService habitService, com.gurizadadointerior.clih.habit.application.OccurrenceCancellationService cancellations) {
+        this.cancellations=cancellations;
 		this.currentUserProvider = currentUserProvider;
 		this.habitService = habitService;
 	}
@@ -54,4 +56,16 @@ public class HabitController {
 		habitService.archivePeriod(currentUserProvider.getCurrentUser(), habitId, dayPeriod);
 		return ResponseEntity.noContent().build();
 	}
+    @org.springframework.web.bind.annotation.PutMapping("/{habitId}/cancellations/{date}/{period}")
+    ResponseEntity<Void> cancelOccurrence(@PathVariable UUID habitId, @PathVariable java.time.LocalDate date,
+        @PathVariable com.gurizadadointerior.clih.habit.domain.DayPeriod period) {
+        cancellations.setCanceled(currentUserProvider.getCurrentUser(), habitId, date, period, true);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/{habitId}/cancellations/{date}/{period}")
+    ResponseEntity<Void> restoreOccurrence(@PathVariable UUID habitId, @PathVariable java.time.LocalDate date,
+        @PathVariable com.gurizadadointerior.clih.habit.domain.DayPeriod period) {
+        cancellations.setCanceled(currentUserProvider.getCurrentUser(), habitId, date, period, false);
+        return ResponseEntity.noContent().build();
+    }
 }

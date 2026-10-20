@@ -54,8 +54,9 @@ public class HabitApplicationService {
 	@Transactional
 	public Habit update(AppUser user, UUID habitId, UpdateHabitCommand command) {
 		var habit = getOwnedActive(user.getId(), habitId);
-		if (command.areaId() != null) {
-			areaService.getOwnedActive(user.getId(), command.areaId());
+		if (command.areaId() != null || Boolean.TRUE.equals(command.active())) {
+			var areaId = command.areaId() == null ? habit.getAreaId() : command.areaId();
+			areaService.getOwnedActive(user.getId(), areaId);
 		}
 		var startDate = command.startDate() == null ? habit.getStartDate() : command.startDate();
 		var endDate = command.endDate() == null ? habit.getEndDate() : command.endDate();
@@ -84,6 +85,18 @@ public class HabitApplicationService {
         if (!remaining.remove(period)) return;
         if (remaining.isEmpty()) habit.archive(Instant.now(clock));
         else habit.setDayPeriods(remaining);
+        repository.save(habit);
+    }
+
+    @Transactional
+    public void setOccurrenceCanceled(AppUser user, UUID habitId, LocalDate date, DayPeriod period, boolean canceled) {
+        var habit = getOwnedActive(user.getId(), habitId);
+        var today = LocalDate.now(clock.withZone(user.zoneId()));
+        if (date.isBefore(today)) throw new ApiException(ErrorCode.VALIDATION_ERROR, "Somente hoje e datas futuras podem ser cancelados.");
+        if (date.isBefore(habit.getStartDate()) || (habit.getEndDate() != null && date.isAfter(habit.getEndDate()))
+            || !habit.getScheduledDays().contains(date.getDayOfWeek())) throw new ApiException(ErrorCode.HABIT_NOT_SCHEDULED);
+        if (!habit.getDayPeriods().contains(period)) throw new ApiException(ErrorCode.VALIDATION_ERROR, "Turno inválido.");
+        if (canceled) habit.cancelOccurrence(date, period); else habit.restoreOccurrence(date, period);
         repository.save(habit);
     }
 

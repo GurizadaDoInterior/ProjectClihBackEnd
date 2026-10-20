@@ -11,6 +11,32 @@ import com.gurizadadointerior.clih.habit.domain.DayPeriod;
 import com.gurizadadointerior.clih.reward.application.*;
 import com.gurizadadointerior.clih.user.domain.AppUser;
 class HistoryConsistencyTest {
+ @Test void archivedCompletionDoesNotHideAnotherPendingHabit() {
+  var user=mock(AppUser.class);var uid=UUID.randomUUID();var date=LocalDate.of(2026,10,18);
+  when(user.getId()).thenReturn(uid);when(user.zoneId()).thenReturn(ZoneOffset.UTC);
+  var habits=mock(HabitApplicationService.class);var completions=mock(HabitCompletionRepository.class);
+  var areas=mock(AreaApplicationService.class);var rewards=mock(RewardApplicationService.class);
+  when(rewards.getProgress(uid)).thenReturn(new ProgressView(10,1,0,100,1,1,date));
+  var pending=mock(com.gurizadadointerior.clih.habit.domain.Habit.class);
+  when(pending.getId()).thenReturn(UUID.randomUUID());
+  when(pending.getDayPeriods()).thenReturn(Set.of(DayPeriod.MORNING));
+  when(pending.getDayPeriodsFor(any())).thenAnswer(inv -> pending.getDayPeriods());
+  when(pending.isScheduledFor(any(LocalDate.class))).thenReturn(true);
+  when(habits.findAllActive(user)).thenReturn(List.of(pending));
+  var archived=mock(HabitCompletion.class);
+  when(archived.getHabitId()).thenReturn(UUID.randomUUID());
+  when(archived.getDayPeriod()).thenReturn(DayPeriod.MORNING);
+  when(archived.getActivityDate()).thenReturn(date);
+  when(completions.findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(uid,date.minusDays(6),date))
+   .thenReturn(List.of(archived));
+  var service=new TodayQueryService(habits,completions,areas,rewards,
+   Clock.fixed(date.atTime(12,0).toInstant(ZoneOffset.UTC),ZoneOffset.UTC));
+  var day=service.getDay(user,date).week().getLast();
+  assertThat(day.planned()).isEqualTo(2);
+  assertThat(day.completed()).isEqualTo(1);
+  assertThat(day.progressPercentage()).isEqualTo(50);
+  assertThat(day.status()).isEqualTo(com.gurizadadointerior.clih.today.application.view.DayStatus.PARTIAL);
+ }
  @Test void recalculatesStreakAndKeepsDaysWithArchivedActivitiesVisible() {
   var user=mock(AppUser.class);var uid=UUID.randomUUID();var date=LocalDate.of(2026,10,18);
   when(user.getId()).thenReturn(uid);when(user.zoneId()).thenReturn(ZoneOffset.UTC);

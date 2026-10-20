@@ -85,6 +85,19 @@ public class Habit extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private Set<DayOfWeek> scheduledDays = new HashSet<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "habit_canceled_occurrences", joinColumns = @JoinColumn(name = "habit_id"))
+    @Column(name = "occurrence", nullable = false, length = 40)
+    private Set<String> canceledOccurrences = new HashSet<>();
+
+    public Set<String> getCanceledOccurrences() { return Set.copyOf(canceledOccurrences); }
+    public Set<DayPeriod> getDayPeriodsFor(LocalDate date) {
+        return getDayPeriods().stream().filter(period -> !canceledOccurrences.contains(date + ":" + period))
+            .collect(java.util.stream.Collectors.toSet());
+    }
+    public void cancelOccurrence(LocalDate date, DayPeriod period) { canceledOccurrences.add(date + ":" + period); }
+    public void restoreOccurrence(LocalDate date, DayPeriod period) { canceledOccurrences.remove(date + ":" + period); }
+
 	protected Habit() {
 	}
 
@@ -160,7 +173,8 @@ public class Habit extends BaseEntity {
 			&& archivedAt == null
 			&& !date.isBefore(startDate)
 			&& (endDate == null || !date.isAfter(endDate))
-			&& scheduledDays.contains(date.getDayOfWeek());
+			&& scheduledDays.contains(date.getDayOfWeek())
+            && !getDayPeriodsFor(date).isEmpty();
 	}
 
 	public UUID getUserId() { return userId; }

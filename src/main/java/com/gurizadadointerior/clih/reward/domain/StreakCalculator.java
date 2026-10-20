@@ -2,45 +2,39 @@ package com.gurizadadointerior.clih.reward.domain;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class StreakCalculator {
 
 	public ProgressSnapshot calculate(Collection<LocalDate> activityDates, LocalDate today) {
-		List<LocalDate> dates = activityDates.stream()
-			.filter(date -> !date.isAfter(today))
-			.distinct()
-			.sorted(Comparator.reverseOrder())
-			.toList();
+		Set<Long> dates = new HashSet<>();
+		long todayEpoch = today.toEpochDay();
+		for (var date : activityDates) {
+			if (!date.isAfter(today)) dates.add(date.toEpochDay());
+		}
 
 		if (dates.isEmpty()) {
 			return new ProgressSnapshot(0, 0, null);
 		}
 
-		int longest = 1;
-		int running = 1;
-		for (int index = 1; index < dates.size(); index++) {
-			if (dates.get(index).equals(dates.get(index - 1).minusDays(1))) {
-				running++;
+		int longest = 0;
+		long lastActive = Long.MIN_VALUE;
+		for (long date : dates) {
+			lastActive = Math.max(lastActive, date);
+			// Only start at the beginning of each run: every date is visited once.
+			if (!dates.contains(date - 1)) {
+				int running = 1;
+				while (dates.contains(date + running)) running++;
 				longest = Math.max(longest, running);
-			} else {
-				running = 1;
 			}
 		}
 
-		var lastActive = dates.getFirst();
 		int current = 0;
-		if (!lastActive.isBefore(today.minusDays(1))) {
-			current = 1;
-			for (int index = 1; index < dates.size(); index++) {
-				if (!dates.get(index).equals(dates.get(index - 1).minusDays(1))) {
-					break;
-				}
-				current++;
-			}
+		if (lastActive >= todayEpoch - 1) {
+			while (dates.contains(lastActive - current)) current++;
 		}
 
-		return new ProgressSnapshot(current, longest, lastActive);
+		return new ProgressSnapshot(current, longest, LocalDate.ofEpochDay(lastActive));
 	}
 }

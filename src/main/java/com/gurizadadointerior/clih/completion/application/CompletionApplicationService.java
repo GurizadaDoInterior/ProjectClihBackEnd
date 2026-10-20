@@ -74,7 +74,7 @@ public class CompletionApplicationService {
 		if (activityDate.isAfter(today)) {
 			throw new ApiException(ErrorCode.INVALID_COMPLETION_TIME);
 		}
-		if (!habit.isScheduledFor(activityDate)) {
+		if (!habit.isScheduledFor(activityDate) || !habit.getDayPeriodsFor(activityDate).contains(period)) {
 			throw new ApiException(ErrorCode.HABIT_NOT_SCHEDULED, ErrorCode.HABIT_NOT_SCHEDULED.defaultMessage(),
 				Map.of("activityDate", activityDate));
 		}

@@ -190,8 +190,30 @@ class EvolutionQueryServiceTest {
         assertEquals(EvolutionDayStatus.PARTIAL,day.status());
     }
 
+	@Test
+	void archivedOrRemovedPeriodCompletionDoesNotHidePendingOccurrences() {
+		var date = LocalDate.of(2026, 10, 18);
+		var habitId = UUID.randomUUID();
+		var habit = dailyHabit(habitId, UUID.randomUUID());
+		when(habitService.findAllActive(user)).thenReturn(List.of(habit));
+		var archived = completion(UUID.randomUUID(), date);
+		var removedPeriod = completion(habitId, date);
+		when(removedPeriod.getDayPeriod()).thenReturn(DayPeriod.EVENING);
+		when(completionRepository.findAllByUserIdAndActivityDateBetweenOrderByActivityDateAsc(
+			userId, date.withDayOfMonth(1), date.withDayOfMonth(31)
+		)).thenReturn(List.of(archived, removedPeriod));
+
+		var day = service.getEvolution(user, YearMonth.from(date), date).calendar().get(17);
+
+		assertEquals(3, day.plannedActivities());
+		assertEquals(2, day.completedActivities());
+		assertEquals(67, day.completionPercentage());
+		assertEquals(EvolutionDayStatus.PARTIAL, day.status());
+	}
+
 	private Habit dailyHabit(UUID habitId, UUID areaId) {
 		var habit = mock(Habit.class);
+        when(habit.getDayPeriodsFor(any())).thenAnswer(inv -> habit.getDayPeriods());
 		when(habit.getId()).thenReturn(habitId);
 		when(habit.getAreaId()).thenReturn(areaId);
 		when(habit.getName()).thenReturn("Estudar Java");

@@ -28,14 +28,15 @@ public record HabitResponse(
 	Set<DayOfWeek> scheduledDays,
 	boolean active,
 	Instant createdAt,
-    Set<DayPeriod> dayPeriods
+    Set<DayPeriod> dayPeriods,
+    Set<String> canceledOccurrences
 ) {
 	public static HabitResponse from(Habit habit) {
 		return new HabitResponse(
 			habit.getId(), habit.getAreaId(), habit.getName(), habit.getDescription(),
 			habit.getMeasurementType(), habit.getTargetValue(), habit.getUnit(),
 			habit.getDayPeriod(), habit.getPreferredTime(), habit.getPosition(), habit.getStartDate(),
-			habit.getEndDate(), habit.getScheduledDays(), habit.isActive(), habit.getCreatedAt(), habit.getDayPeriods()
+			habit.getEndDate(), habit.getScheduledDays(), habit.isActive(), habit.getCreatedAt(), habit.getDayPeriods(), habit.getCanceledOccurrences()
 		);
 	}
 }

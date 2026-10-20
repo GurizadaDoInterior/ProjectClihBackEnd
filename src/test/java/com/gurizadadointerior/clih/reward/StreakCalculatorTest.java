@@ -37,4 +37,25 @@ class StreakCalculatorTest {
 		assertThat(result.currentStreak()).isZero();
 		assertThat(result.longestStreak()).isEqualTo(2);
 	}
+
+	@Test
+	void handlesUnorderedDuplicatesFutureDatesAndAStreakEndingYesterday() {
+		var today = LocalDate.of(2026, 10, 20);
+		var result = calculator.calculate(List.of(today.minusDays(2), today.plusDays(1),
+			today.minusDays(8), today.minusDays(1), today.minusDays(2), today.minusDays(3)), today);
+
+		assertThat(result.currentStreak()).isEqualTo(3);
+		assertThat(result.longestStreak()).isEqualTo(3);
+		assertThat(result.lastActiveDate()).isEqualTo(today.minusDays(1));
+	}
+
+	@Test
+	void ignoresAnEntirelyFutureHistory() {
+		var today = LocalDate.of(2026, 10, 20);
+		var result = calculator.calculate(List.of(today.plusDays(1)), today);
+
+		assertThat(result.currentStreak()).isZero();
+		assertThat(result.longestStreak()).isZero();
+		assertThat(result.lastActiveDate()).isNull();
+	}
 }

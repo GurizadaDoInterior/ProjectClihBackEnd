@@ -68,7 +68,7 @@ public class TodayQueryService {
 		var areas = areaService.list(user).stream()
 			.collect(Collectors.toMap(area -> area.getId(), TodayAreaResponse::from));
 
-		var items = habits.stream().flatMap(habit -> habit.getDayPeriods().stream().sorted().map(period -> {
+		var items = habits.stream().flatMap(habit -> habit.getDayPeriodsFor(date).stream().sorted().map(period -> {
 			var completion = completions.get(occurrenceKey(habit.getId(), period));
 			return new TodayHabitResponse(
 				habit.getId(), habit.getName(), areas.get(habit.getAreaId()), habit.getMeasurementType(),
@@ -83,7 +83,7 @@ public class TodayQueryService {
 		var completed = Math.toIntExact(items.stream().filter(TodayHabitResponse::completed).count());
 		var percentage = items.isEmpty() ? 0 : (int) Math.round((completed * 100.0) / items.size());
 		var week = buildWeek(user, date, allHabits);
-		var areaProgress = buildAreaProgress(areas, habits, completions);
+		var areaProgress = buildAreaProgress(areas, habits, completions, date);
 
 		return new TodayResponse(
 			date,
@@ -113,10 +113,13 @@ public class TodayQueryService {
 			.map(day -> {
 				var plannedHabitIds = habits.stream()
 					.filter(habit -> habit.isScheduledFor(day))
-					.flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period)))
+					.flatMap(habit -> habit.getDayPeriodsFor(day).stream().map(period -> occurrenceKey(habit.getId(), period)))
 					.collect(Collectors.toSet());
-				var completed = completedByDate.getOrDefault(day, Set.of()).size();
-                var planned = Math.max(plannedHabitIds.size(),completed);
+				var completedOccurrences = completedByDate.getOrDefault(day, Set.of());
+				var completed = completedOccurrences.size();
+				// Keep historical completions without hiding other occurrences still pending.
+				plannedHabitIds.addAll(completedOccurrences);
+				var planned = plannedHabitIds.size();
 				var progress = percentage(completed, planned);
 				return new TodayWeekDayResponse(
 					day,
@@ -134,15 +137,15 @@ public class TodayQueryService {
 	private List<AreaProgressView> buildAreaProgress(
 		Map<UUID, TodayAreaResponse> areas,
 		List<Habit> habits,
-		Map<String, HabitCompletion> completions
+		Map<String, HabitCompletion> completions, LocalDate date
 	) {
 		return areas.values().stream()
 			.sorted(Comparator.comparingInt(TodayAreaResponse::position))
 			.map(area -> {
-				var planned = habits.stream().filter(habit -> habit.getAreaId().equals(area.id())).mapToInt(habit -> habit.getDayPeriods().size()).sum();
+				var planned = habits.stream().filter(habit -> habit.getAreaId().equals(area.id())).mapToInt(habit -> habit.getDayPeriodsFor(date).size()).sum();
 				var completed = Math.toIntExact(habits.stream()
 					.filter(habit -> habit.getAreaId().equals(area.id()))
-					.flatMap(habit -> habit.getDayPeriods().stream().map(period -> occurrenceKey(habit.getId(), period)))
+					.flatMap(habit -> habit.getDayPeriodsFor(date).stream().map(period -> occurrenceKey(habit.getId(), period)))
                     .filter(completions::containsKey)
 					.count());
 				return new AreaProgressView(area, planned, completed, percentage(completed, planned));
