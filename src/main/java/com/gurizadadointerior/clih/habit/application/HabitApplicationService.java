@@ -91,8 +91,7 @@ public class HabitApplicationService {
     @Transactional
     public void setOccurrenceCanceled(AppUser user, UUID habitId, LocalDate date, DayPeriod period, boolean canceled) {
         var habit = getOwnedActive(user.getId(), habitId);
-        var today = LocalDate.now(clock.withZone(user.zoneId()));
-        if (date.isBefore(today)) throw new ApiException(ErrorCode.VALIDATION_ERROR, "Somente hoje e datas futuras podem ser cancelados.");
+
         if (date.isBefore(habit.getStartDate()) || (habit.getEndDate() != null && date.isAfter(habit.getEndDate()))
             || !habit.getScheduledDays().contains(date.getDayOfWeek())) throw new ApiException(ErrorCode.HABIT_NOT_SCHEDULED);
         if (!habit.getDayPeriods().contains(period)) throw new ApiException(ErrorCode.VALIDATION_ERROR, "Turno inválido.");

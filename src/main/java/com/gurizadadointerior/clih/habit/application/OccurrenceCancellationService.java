@@ -15,15 +15,19 @@ public class OccurrenceCancellationService {
     private final HabitApplicationService habits;
     private final HabitCompletionRepository completions;
     private final RewardApplicationService rewards;
-    public OccurrenceCancellationService(HabitApplicationService habits, HabitCompletionRepository completions, RewardApplicationService rewards) {
-        this.habits=habits; this.completions=completions; this.rewards=rewards;
+    private final com.gurizadadointerior.clih.completion.application.CompletionApplicationService completionService;
+    public OccurrenceCancellationService(HabitApplicationService habits, HabitCompletionRepository completions, RewardApplicationService rewards, com.gurizadadointerior.clih.completion.application.CompletionApplicationService completionService) {
+        this.completionService=completionService; this.habits=habits; this.completions=completions; this.rewards=rewards;
     }
     @Transactional
     public void setCanceled(AppUser user, UUID habitId, LocalDate date, DayPeriod period, boolean canceled) {
         rewards.lockProgress(user.getId());
         habits.getOwnedActive(user.getId(), habitId);
-        if (canceled && completions.existsByUserIdAndHabitIdAndActivityDate(user.getId(), habitId, date, period))
-            throw new ApiException(ErrorCode.VALIDATION_ERROR, "Desfaça a conclusão antes de cancelar este dia.");
+        if (canceled) {
+            completions.findAllByUserIdAndActivityDate(user.getId(),date).stream()
+                .filter(c -> c.getHabitId().equals(habitId) && c.getDayPeriod() == period)
+                .forEach(c -> completionService.undo(user,habitId,c.getId()));
+        }
         habits.setOccurrenceCanceled(user, habitId, date, period, canceled);
     }
 }
